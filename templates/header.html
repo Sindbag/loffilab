@@ -1,0 +1,101 @@
+{% load staticfiles %}
+
+<div class="header-middle"><!--header-middle-->
+    <div class="container nopadding">
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="logo pull-left">
+                    <a href="/"><img style="height:39px; margin-top:1rem;" src="{% static 'images/logo.png' %}"></a>
+                </div>
+            </div>
+            <div class="col-sm-7 pull-right">
+                <div class="authorisation pull-right">
+                    <ul class="nav navbar-nav">
+                    {% if user.is_authenticated %}
+{#                        {% if user.has_unread_ans %}<li><a href="{% url 'account' %}" title="У Вас есть непрочитанные ответы"><i class="glyphicon glyphicon-bell" style="color: #ffb325;"></i>&nbsp;<span style="font-size: 14pt;">{{ user.has_unread_ans }}</span></a></li>{% endif %}#}
+                        <li><a  title="Корзина" href="{% url 'account' %}" target="_blank"><i class="fa fa-shopping-cart" id="user_cart"></i>&nbsp;<span id="cart_count">{{ user.cart.item_count }}</span></a></li>
+                        <li><a href="{% url 'logout' %}?next={{ request.path }}" title="Выход"><i class="glyphicon glyphicon-log-out"></i></a></li>
+                    {% else %}
+                        <li><a href="" id="login_form" data-toggle="modal" data-target="#loginModal" class="active" title="Вход/Регистрация"><i class="glyphicon glyphicon-user"></i> Войти</a></li>
+                    {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 block-center">
+                <div class="shop-menu block-center text-center">
+                    <ul class="nav navbar-nav">
+                        <li><a {% ifequal section 'about' %}class="now_active"{% endifequal %} href="{% url 'about' %}">О нас</a></li>
+                        {% for i in sects %}
+                            <li><a class="hover-react{% ifequal i section %} now_active{% endifequal %}" data-target="sub-{{ i.link }}" href="{% url 'section' i.link %}">{{ i.title }}</a></li>
+                        {% endfor %}
+                        <li><a {% ifequal section 'news' %}class="now_active"{% endifequal %} href="{% url 'news' %}">Новости</a></li>
+                        <li><a {% ifequal section 'contacts' %}class="now_active"{% endifequal %} href="{% url 'contacts' %}">Контакты</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!--/header-middle-->
+
+<div class="header-bottom"><!--header-bottom-->
+    <div class="container nopadding">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="mainmenu block-center text-center">
+                    {% if section %}
+                    <ul class="nav navbar-nav">
+                        {% for i in section.subclasses.all %}
+                            <li><a class="{% ifequal subsection i %}now_active{% endifequal %}" href="{% url 'subsection' i.super_class.link i.link %}">{{ i.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!--/header-bottom-->
+
+{% if not user.is_authorized %}
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Авторизация и регистрация</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+            <div class="col-sm-6">
+                {% if form.errors %}
+                    <p class="error">Сожалеем, вы неправильно ввели логин или пароль</p>
+                {% endif %}
+                <div class="login-form"><!--login form-->
+                    <h2>Войти в существующий аккаунт</h2>
+                    <form action="{% url 'login' %}?next={{ request.path }}" method="POST">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-default slow-transition">Войти</button>
+                    </form>
+                </div><!--/login form-->
+            </div>
+            <div class="col-sm-6">
+                <div class="signup-form"><!--sign up form-->
+                    <h2>Зарегистрировать новый аккаунт</h2>
+                    <form action="{% url 'register' %}?next={{ request.path }}" method="post">
+                        {% csrf_token %}
+                        {{ userregform.as_p }}
+                        {{ clientform.as_p }}
+                        <button type="submit" class="btn btn-default slow-transition">Зарегистрироваться</button>
+                    </form>
+                </div><!--/sign up form-->
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+{% endif %}

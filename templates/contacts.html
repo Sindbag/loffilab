@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<section id="contacts"> <!-- contacts -->
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <script src="http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU" type="text/javascript"></script>
+		    <p class="name"><span style="font-size: 14pt;">Компания "Лоффилаб"</span></p>
+            <p class="tel">Телефон:&nbsp;+7&nbsp;499&nbsp;502&nbsp;41&nbsp;71</p>
+            <p class="email">E-mail:&nbsp;<a href="mailto:info@loffilab.ru">info@loffilab.ru</a><a href="/contacts.html"></a></p>
+            <p class="email">Сайт:&nbsp;<a href="/">www.loffilab.ru</a></p>
+            <p>Россия, Москва<br />123001,&nbsp;ул.&nbsp;Спиридоновка,&nbsp;д.4,&nbsp;стр.1,&nbsp;1-й&nbsp;этаж<br />Метро:&nbsp;Тверская</p>
+            <p>Режим работы:&nbsp;</p>
+            <p>Пн-Пт с 10:00 до 21:00<br />Сб-Вс с 11.00 до 18.00</p>
+            <p>Ведем проекты на территории стран Евросоюза</p>
+            <a href="http://maps.yandex.ru/-/CVrDvV8J" id="see-map"></a>
+        </div>
+        <div class="col-md-6" id="map"></div>
+    </div>
+</div>
+</section> <!-- /contacts -->
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            ymaps.ready(init);
+
+            function init () {
+                    // Создание экземпляра карты и его привязка к контейнеру с
+                    // заданным id ("map")
+                    var myMap = new ymaps.Map('map', {
+                            // При инициализации карты, обязательно нужно указать
+                            // ее центр и коэффициент масштабирования
+                            center: [55.75861, 37.596058], // Нижний Новгород
+                            zoom: 16
+                        });
+
+                    // Создание метки
+                    var myPlacemark = new ymaps.Placemark(
+                    // Координаты метки
+                    [55.75861, 37.596058],
+                    {
+                        hintContent: 'Loffilab'
+                    }
+                    );
+
+                // Добавление метки на карту
+                myMap.geoObjects.add(myPlacemark);
+            }
+        });
+    </script>
+{% endblock %}

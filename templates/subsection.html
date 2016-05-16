@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% load thumbnail %}
+{% load item_details %}
+
+{% block content %}
+<section id="slider"><!--slider-->
+    <div class="container nopadding">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="col-sm-6 pull-left" style="padding-top:4rem;">
+                    <h1>{{ subsection.title }}</h1>
+                    <p>{{ subsection.description }}</p>
+                </div>
+                <div class="col-sm-6 pull-right hidden-xs" >
+                {% thumbnail rand_it.images.first.image "650" as rand_sl%}
+                    <img src="{{ rand_sl.url }}" class="promoted_item img-responsive"
+                         alt="{{ rand_it.title }}"  />
+                {% endthumbnail %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section><!--/slider-->
+
+<section id="{{ subsection.link }}">
+<div class="container nopadding">
+<div class="row">
+<div class="col-xs-12 features_items"><!--features_items-->
+{#<hr>#}
+    {% for i in items %}
+        {% item_thumbnail i '' i.subclass.link %}
+    {% endfor %}
+</div>
+</div>
+</div> <!--/features_items-->
+</section> <!--/section-->
+
+{% pagination items %}
+{% endblock %}

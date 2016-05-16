@@ -1,0 +1,22 @@
+{% load thumbnail %}
+
+<div class="col-sm-6 col-md-3">
+<a href="{% url 'item' item.section.link item.subclass.link item.link %}">
+    <div class="product-image-wrapper">
+        <div class="single-products">
+            <div class="productinfo text-center">
+                <div class="embed-responsive embed-responsive-4by3 text-center">
+                    <div class="embed-responsive-item change-opacity">
+                    {% thumbnail item.images.first.image "300" as it %}
+                        <img src="{{ it.url }}" alt="{{ item.title }}" class="image-resized img-res-4by3" />
+                    {% endthumbnail %}
+                    </div>
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.price }}&nbsp;₽</p>
+            </div>
+{#              <img src="images/home/sale.png" class="new" alt="" />#}
+        </div>
+    </div>
+</a>
+</div>

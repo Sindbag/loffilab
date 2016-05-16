@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load item_details %}
+{% block content %}
+<section id="account" xmlns="http://www.w3.org/1999/html">
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 user_details">
+            <p>{{ user.name }}</p>
+            <p>Email: {{ user.email }}</p>
+            {% if user.details.tel %}<p>Телефон: {{ user.details.tel }}</p>{% endif %}
+        </div>
+    </div>
+</div>
+</section>
+
+<section id="cart_items">
+    <div class="container">
+        {% ifequal order_filled False %}
+            {% if mistake == True %}
+                <div class="alert alert-danger">Произошла ошибка</div>
+            {% endif %}
+            {% if user_cart.item_count %}
+                {% cart_details user.cart %}
+                {{ order_form.tel.errors }}
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="col-sm-10 col-md-8 col-lg-6">
+                        <form action="" method="POST">
+                            {% csrf_token %}
+                            <label style="padding-right: 10px; font-weight: 400 !important; font-size: 12pt;" for="tel">Номер телефона для связи<span style="color: red;">*</span> :</label>
+                            <input type="tel" name="{{ order_form.tel.html_name }}" placeholder="Номер для связи" id="tel" value="{{ user.details.tel }}"><br>
+                            <label for="details" style="font-weight: 400 !important; font-size: 12pt;">Дополнительно:</label><br>
+                            {{ order_form.question }}
+                            <p><span style="color: red;">* - обязательные для заполнения поля</span></p>
+                            <button class="btn btn-sm update" type="submit">Оставить заявку</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="jumbotron">
+                <p>В данный момент Ваша корзина пуста</p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-success">Заказ успешно добавлен!</div>
+        {% endifequal %}
+        {% if user.orders.all|length %}
+        <h4 class="h4text">Ваши прошлые заказы:</h4>
+            <div class="row" style="margin-bottom: 0.2rem;">
+                <div class="col-sm-1">#</div>
+                <div class="col-sm-2">Дата</div>
+                <div class="col-sm-5">Товары</div>
+                <div class="col-sm-2">Сумма</div>
+                <div class="col-sm-2">Статус</div>
+            </div>
+            {% for ord in user.orders.all %}
+                <div class="row">
+                    <div class="col-sm-1">{{ ord.id }}</div>
+                    <div class="col-sm-2">{{ ord.create_date }}</div>
+                    <div class="col-sm-5">{{ ord.items_and_price }}</div>
+                    <div class="col-sm-2">{{ ord.sum }}&nbsp;₽</div>
+                    <div class="col-sm-2" title="{{ ord.status.text }}">{{ ord.status }}</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <hr>
+        <div class="row" style="margin-bottom: 50px;">
+            <div class="col-sm-10 col-md-8 col-lg-6" id="questions">
+                {% if user.get_today_questions >= 20 %}
+                    <div class="alert alert-danger" role="alert">Вы уже задали сегодня 20 вопросов</div>
+                {% endif %}
+                <h4>Ваши вопросы</h4>
+                <form action="{% url 'add_question' %}" method="POST">
+                    {% csrf_token %}
+                    {{ questionform.as_p }}
+                    <button class="btn btn-sm ask" type="submit">Отправить вопрос</button>
+                </form>
+            {% if user.questions %}
+                {% for q in user.questions.all %}
+                    <div class="question col-xs-12 nopadding">
+                        <p>{{ q.question }}</p>
+                        <p class="ans">{% if q.answer %}{{ q.answer }}{% else %}<span style="color:#999;">Вопрос находится в обработке</span>{% endif %}</p>
+                        <span class="date">{{ q.pub_date }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</section> <!--/#cart_items-->
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="/static/js/formatnumber.min.js"></script>
+<script>
+    $.FormatNumberSetup({
+        decimalDigits     : 0,
+        decimalSeparator  : ",",
+        prefix            : "",
+        suffix            : "\xa0₽",
+        thousandSeparator : " "
+    });
+    function alert_val(text) {
+        $('body').prepend("\
+            <div class=\"alert alert-success noselect\" style=\"position: absolute; right:0; width: 200px; z-index:12500; margin:2rem;\">\
+                <a class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>\
+                <strong>" + text + "</strong>\
+            </div>\
+        ");
+        $(".alert").fadeTo(2000, 500).slideUp(500, function(){
+            $(".alert").alert('close');
+        });
+    }
+
+    $(function() {
+        $('.cart_quantity_button').each(function() {
+            var that = $(this);
+            var item = that.data('item-id');
+            var am = that.children('.cart_quantity_input');
+
+            that.parent().siblings('.cart_delete').click(function() {
+                $.post(
+                        "{% url 'delete_item' %}",
+                        {
+                            'link': item
+                        }
+                )
+                .done(function(data) {
+                    that.parent().parent().del();
+                    alert_val("Удалено!");
+                    $('#cart_count').text(data.total_items);
+                    $('#total_cart_price').text($.FormatNumber(data.total_price));
+                })
+                .fail(
+                    function(xhr, textStatus, errorThrown) {
+                        ajax_fail(xhr,textStatus, errorThrown);
+                    }
+                );
+            });
+
+            function update_timer() {
+                var tid = am.data("timer-id");
+                if (tid !== undefined) {
+                    clearTimeout(tid);
+                }
+                am.data("timer-id", setTimeout(function() { am.change(); }, 500)); // hack to turn on ajax request
+            }
+
+            that.children('.cart_quantity_down').click(function() {
+                if (am.val() == 1) {
+                    return;
+                }
+                if (parseInt(am.val()) <= 0) {
+                    alert('Некорректное значение');
+                    am.val(1);
+                    return;
+                }
+                am.val(parseInt(am.val()) - 1);
+                update_timer();
+            });
+
+            that.children('.cart_quantity_up').click(function() {
+                if (parseInt(am.val()) <= 0) {
+                    alert('Некорректное значение');
+                    am.val(1);
+                    return;
+                }
+                am.val(parseInt(am.val()) + 1);
+                update_timer();
+            });
+
+            am.change(function() {
+                if (am.val() <= 0) {
+                    alert('Введено некорректное значение!');
+                    am.val(1);
+                    return;
+                }
+                $.post(
+                    "{% url 'add_to_cart' %}",
+                    {
+                        'link': item,
+                        'amount': am.val(),
+                        'change': true
+                    })
+                .done(
+                    function(data) {
+                        if (data.error == "NOT AUTHORISED") {
+                            $('#login_form').click();
+                            return;
+                        }
+                        alert_val("Изменено!");
+                        am.val(data.amount);
+                        that.parent().siblings('.cart_total').children('.cart_total_price').text($.FormatNumber(data.sum));
+                        $('#cart_count').text(data.total_items);
+                        $('#total_cart_price').text($.FormatNumber(data.total_price));
+                    })
+                .fail(
+                    function(xhr, textStatus, errorThrown) {
+                        ajax_fail(xhr,textStatus, errorThrown);
+                    }
+                );
+            });
+        });
+    });
+</script>
+{% endblock %}

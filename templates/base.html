@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+{% block head %}
+    {% include 'head.html' %}
+{% endblock %}
+</head><!--/head-->
+<body>
+<header>
+    {% block header %}
+        {% include 'header.html' %}
+    {% endblock %}
+</header> <!--/header-->
+
+{% block base %}
+{% block content %}
+{% endblock %}
+{% endblock %}
+
+{% block footer %}
+    {% include 'footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/jquery.scrollUp.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery.prettyPhoto.js"></script>
+    <script src="/static/js/main.js"></script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% load item_details %}
+
+{% block content %}
+<section id="all_items">
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 features_items"><!--features_items-->
+            {% for i in items %}
+                {% item_thumbnail i i.subclass.link i.section.link %}
+            {% endfor %}
+        </div>
+    </div>
+</div> <!--/features_items-->
+</section> <!--/section-->
+{% pagination items %}
+{% endblock %}

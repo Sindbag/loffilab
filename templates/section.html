@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% load item_details %}
+
+{% block content %}
+<section id="sec-{{ section.link }}">
+<div class="container nopadding">
+<div class="row">
+<div class="col-xs-12 features_items"><!--features_items-->
+{#	<h2 class="title" style="margin-bottom: 0;">{{ section.title }}</h2>#}
+    {% for subc in section.subclasses.all %}
+        <div class="col-sm-6 col-md-3">
+            <a href="{% url 'subsection' section.link subc.link %}">
+                <div class="product-image-wrapper noborder">
+                    <div class="single-products">
+                        <div class="productinfo text-center">
+                            <div class="embed-responsive embed-responsive-4by3 text-center">
+                                <div class="embed-responsive-item change-opacity">
+                                {% thumbnail subc.image "300" as s_t %}
+                                    <img src="{{ s_t.url }}" alt="{{ subc.title }}" class="image-resized img-res-4by3" />
+                                {% endthumbnail %}
+                                </div>
+                            </div>
+                            <h3 class="slow-transition nomargin">{{ subc.title }}</h3>
+                        </div>
+            {#              <img src="images/home/sale.png" class="new" alt="" />#}
+                    </div>
+                </div>
+            </a>
+        </div>
+    {% endfor %}
+</div></div>
+</div> <!--/features_items-->
+</section> <!--/section-->
+
+{% pagination items %}
+{% endblock %}

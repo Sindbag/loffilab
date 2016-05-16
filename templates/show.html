@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load item_details %}
+{% load thumbnail %}
+
+{% block content %}
+<section id="{{ item.link }}">
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="product-details"><!--product-details-->
+                <div class="col-sm-5">
+                    <div class="view-product embed-responsive embed-responsive-4by3">
+                        <div class="embed-responsive-item product-img text-center block-center">
+                            <a id="gallery_start" style="cursor: pointer;">{% thumbnail item.images.first.image "650" as it_im_t %}<img src="{{ it_im_t.url }}" alt="" />{% endthumbnail %}</a>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 2rem;">
+                        {% for im in item.images.all %}
+                            <div class="col-md-2 col-sm-3 col-xs-4 nopadding">
+                                <div class=" embed-responsive embed-responsive-4by3">
+                                    <div class="nopadding embed-responsive-item" style="padding:3px;">
+                                          <a href="{{ im.url }}" rel="prettyPhoto[gallery]">
+                                          {% thumbnail im.image "80" as im_t%}
+                                              <img src="{{ im_t.url }}" class="img-responsive img-res-4by3 change-opacity" alt="{{ item.title }}" />
+                                          {% endthumbnail %}
+                                          </a>
+    {#                                    <a style="cursor: pointer;"><img style="width:30%;" src="{{ im.url }}" alt="" class="product_thumb_img"/></a>#}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-sm-7">
+                    <div class="product-information"><!--/product-information-->
+                        <div class="col-xs-12" style="margin-left:0;padding-left: 0;">
+                            <h2>{{ item.title }}</h2><p>{{ item.materials }}</p>
+                            <p><br>{{ item.size_x }}мм x {{ item.size_y }}мм{% if item.size_z %} x {{ item.size_z }}мм{% endif %}</p>
+                            <p><br>{{ item.description|safe }}</p>
+                            <div class="row nopadding" id="prod_cart_det" style="font-size:16pt; color:#000;"><br>
+                                <div class="col-sm-3 col-md-2  text-left" style="line-height: 38px;">{{ item.price }}&nbsp;₽</div>
+                                <div class="col-sm-7 col-md-3 text-right nopadding">
+                                    <div class="cart_quantity_button pull-right">
+                                        <a class="cart_quantity_down noselect" style="height:38px; line-height: 38px; cursor: pointer;">&nbsp;-&nbsp;</a>
+                                        <input id="req_amount" class="cart_quantity_input" type="number" min="1" max="30" value="1" size="1" autocomplete="off" />
+                                        <a class="cart_quantity_up noselect" style="height:38px; line-height: 38px; cursor: pointer;">&nbsp;+&nbsp;</a>
+                                    </div>
+                                </div>
+                                <div class="col-sm-1 text-left nopadding">
+                                    <button type="button" style="margin-top:0 !important; height: 38px;" class="btn btn-default cart add_to_cart slow-transition" data-item-id="{{ item.link }}">
+                                    <i class="fa fa-shopping-cart"></i>&nbsp;Заказать</button>
+                                </div>
+                            </div>
+                            {% if in_cart %}
+                                <p>Сейчас в корзине: <span id="curr_in_cart">{{ in_cart }}</span></p>
+                            {% endif %}
+                        </div>
+                    </div><!--/product-information-->
+                </div>
+            </div><!--/product-details-->
+        </div>
+    </div>
+</div>
+</section>
+
+{% if rand_items %}
+<section id="related_items">
+<div class="container">
+<div class="row">
+	<h2 class="title small"><a href="{% url 'subsection' item.section.link item.subclass.link %}">Другие <span class="text-lowercase">{{ item.subclass.title }}</span></a></h2>
+<div class="col-xs-12 features_items"><!--features_items-->
+    {% for i in rand_items %}
+        {% item_thumbnail i %}
+    {% endfor %}
+</div>
+</div>
+</div> <!--/features_items-->
+</section> <!--/section-->
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function(){
+    var am = $('#req_amount');
+
+    $('.cart_quantity_down').click(function() {
+        if (am.val() == 1) {
+            return;
+        }
+
+        if (parseInt(am.val()) <= 0) {
+            alert('Некорректное значение');
+            am.val('1');
+            return;
+        }
+
+        am.val(parseInt(am.val()) - 1);
+    });
+
+    $('.cart_quantity_up').click(function() {
+        if (parseInt(am.val()) <= 0) {
+            alert('Некорректное значение');
+            am.val('1');
+            return;
+        }
+        am.val(parseInt(am.val()) + 1);
+    });
+
+    $("a[rel^='prettyPhoto']").prettyPhoto({
+            social_tools: false ,
+            theme: 'dark_squared'
+    });
+    $("#gallery_start").click(function() {
+      $("a[rel^='prettyPhoto']:first").click();
+    });
+
+    $(".add_to_cart").click(function() {
+      {% if user.is_anonymous %}
+        $("#login_form").click();
+        return;
+      {% endif %}
+      var item_id = $(this).data('item-id');
+      var am = $('#req_amount');
+      if (am.val() <= 0) {
+          alert('Введено некорректное значение!');
+          am.val(1);
+          return;
+      }
+      var amount = 1;
+      if (am) {
+        amount = am.val();
+      }
+      $.post("{% url 'add_to_cart' %}", {
+          'link': item_id,
+          'amount': amount
+        })
+        .done(
+            function(data) {
+                if (data.error == 'NOT_AUTHORISED') {
+                    $('#login_form').click();
+                    return;
+                };
+                $('body').prepend("\
+                    <div class=\"alert alert-success\" style=\"position: absolute; right:0; width: 200px; z-index:12500; margin:2rem;\">\
+                        <a class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>\
+                        <strong>Добавлено!</strong>\
+                    </div>\
+                ");
+                $(".alert").fadeTo(2000, 500).slideUp(500, function(){
+                    $(".alert").alert('close');
+                });
+                $('#cart_count').text(data.total_items);
+                var curr_cart = $('#curr_in_cart');
+                if (curr_cart.length === 0) {
+                    $('#prod_cart_det').parent().append("<p>Сейчас в корзине: <span id=\"curr_in_cart\">" + data.amount + "</b></p>");
+                } else {
+                    curr_cart.text(data.amount);
+                }
+            }
+        )
+        .fail(
+            function(xhr, textStatus, errorThrown) {
+                ajax_fail(xhr,textStatus, errorThrown);
+            }
+        );
+	});
+  });
+</script>
+{% endblock %}

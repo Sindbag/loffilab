@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load item_details %}
+{% load thumbnail %}
+
+{% block content %}
+<section id="news"> <!--news-->
+<div class="container">
+<div class="row nopadding">
+<div class="col-xs-12"><!--features_items-->
+    {% for n in news %}
+        <a href="{% url 'article' n.link %}">
+        <div class="row article nopadding" style="margin-bottom: 3rem;">
+            <div class="col-sm-4">
+                <div class="embed-responsive embed-responsive-16by9">
+                    {% thumbnail n.image "450" as n_img %}
+                        <img class="embed-responsive-item img-responsive article_img" alt="{{ n.title }}" src="{{ n_img.url }}" />
+                    {% endthumbnail %}
+                </div>
+            </div>
+            <div class="col-sm-8" style="padding-right:0; margin-right:0;">
+                <a class="h2" href="{% url 'article' n.link %}">{{ n.title }}</a>
+                <p class="article">{{ n.short_text|safe }}</p>
+            </div>
+        </div>
+            <span class="article_date" style="position: relative; top: -4.5rem;">{{ n.pub_date }}</span>
+        </a>
+        <div class="clearfix"></div>
+    {% endfor %}
+{% pagination news %}
+</div>
+</div>
+</div> <!--/features_items-->
+</section> <!--/news-->
+{% endblock %}

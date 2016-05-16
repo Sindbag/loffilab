@@ -1,0 +1,58 @@
+{% load thumbnail %}
+
+<div class="table-responsive cart_info">
+    <table class="table table-condensed" style="margin-bottom: 0;">
+        <thead>
+            <tr class="cart_menu">
+                <td class="image">Товар</td>
+                <td class="description"></td>
+                <td class="price">Цена</td>
+                <td class="quantity">Количество</td>
+                <td class="total">Сумма</td>
+                <td></td>
+            </tr>
+        </thead>
+        <tfoot style="border-top: 1px solid #E6E4DF;">
+            <tr>
+                <td class="image"></td>
+                <td class="description"></td>
+                <td class="price"></td>
+                <td class="quantity"><p class="pull-right" style="margin-top: 1rem;">Сумма заказа</p></td>
+                <td class="total" style="padding: 0 0 0 5px !important;"><p class="cart_total_price" id="total_cart_price" style="margin-bottom: 0;">{{ cart.sum_price }}&nbsp;₽</p></td>
+                <td></td>
+            </tr>
+        </tfoot>
+        <tbody>
+        {% for ci in cart.cartitem_set.all %}
+            <tr>
+                <td class="cart_product">
+                    <a href="{% url 'item' ci.item.section.link ci.item.subclass.link ci.item.link %}">
+                    {% thumbnail ci.item.images.first.image "x80" as itemimg %}
+                        <img style="max-height: 6rem;" src="{{ itemimg.url }}" alt="{{ ci.item.title }}" />
+                    {% endthumbnail %}</a>
+                </td>
+                <td class="cart_description">
+                    <h4><a href="{% url 'item' ci.item.section.link ci.item.subclass.link ci.item.link %}" target="_blank">{{ ci.item.title }}</a></h4>
+                    <p>{{ ci.item.link }}</p>
+                </td>
+                <td class="cart_price">
+                    <p>{{ ci.item.price }}&nbsp;₽</p>
+                </td>
+                <td class="cart_quantity">
+                    <div class="cart_quantity_button" data-item-id="{{ ci.item.link }}">
+                        <a class="cart_quantity_down noselect" style="cursor: pointer;">&nbsp;-&nbsp;</a>
+                        <input class="cart_quantity_input" type="number" min="1" name="quantity" value="{{ ci.amount }}" autocomplete="off" size="2">
+                        <a class="cart_quantity_up noselect" style="cursor: pointer;">&nbsp;+&nbsp;</a>
+                    </div>
+                </td>
+                <td class="cart_total">
+                    <p class="cart_total_price">{{ ci.sprice }}&nbsp;₽</p>
+                </td>
+                <td class="cart_delete">
+                    <a class="cart_quantity_delete remove_from_cart" data-item-id="{{ ci.item.link }}" href=""><i class="fa fa-times"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
