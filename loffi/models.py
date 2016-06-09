@@ -8,6 +8,11 @@ from django.forms import ModelForm, Textarea, Form, TextInput, EmailInput, Passw
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
+from django.db import models
+from django.contrib.auth.models import (
+    BaseUserManager, AbstractBaseUser
+)
+
 
 def subclass_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/images_<subclass>/<model>_<filename>
@@ -19,11 +24,6 @@ alphanumeric = RegexValidator(r'^[0-9a-zA-Z_-]*$', 'Только латинск�
 phone_regex = RegexValidator(regex=r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$',
                              message="Телефон должен быть введён в формате: "
                                      "'+7 (999) 999 9999'.")
-
-from django.db import models
-from django.contrib.auth.models import (
-    BaseUserManager, AbstractBaseUser
-)
 
 
 class MyUserManager(BaseUserManager):

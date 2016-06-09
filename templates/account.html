@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load item_details %}
+{% load cache %}
+
 {% block content %}
 <section id="account" xmlns="http://www.w3.org/1999/html">
 <div class="container">
@@ -43,6 +45,7 @@
         {% else %}
             <div class="alert alert-success">Заказ успешно добавлен!</div>
         {% endifequal %}
+        {% cache 500 orders request.user %}
         {% if user.orders.all|length %}
         <h4 class="h4text">Ваши прошлые заказы:</h4>
             <div class="row" style="margin-bottom: 0.2rem;">
@@ -62,6 +65,7 @@
                 </div>
             {% endfor %}
         {% endif %}
+        {% endcache %}
         <hr>
         <div class="row" style="margin-bottom: 50px;">
             <div class="col-sm-10 col-md-8 col-lg-6" id="questions">
@@ -74,6 +78,7 @@
                     {{ questionform.as_p }}
                     <button class="btn btn-sm ask" type="submit">Отправить вопрос</button>
                 </form>
+            {% cache 500 questions request.user %}
             {% if user.questions %}
                 {% for q in user.questions.all %}
                     <div class="question col-xs-12 nopadding">
@@ -83,6 +88,7 @@
                     </div>
                 {% endfor %}
             {% endif %}
+            {% endcache %}
             </div>
         </div>
     </div>

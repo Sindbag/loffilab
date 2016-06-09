@@ -4,6 +4,7 @@ import json
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
@@ -13,6 +14,7 @@ import random
 
 # Create your views here.
 from django.template import RequestContext
+from django.views.decorators.cache import cache_page
 
 from loffi.models import ItemClass, ItemModel, MainSlider, ItemSubClass, Article, Cart, CartItem, OrderForm, Order, \
     Client, UserRegForm, ClientForm, QuestionForm
@@ -21,6 +23,7 @@ from loffi.models import ItemClass, ItemModel, MainSlider, ItemSubClass, Article
 # random_idx = random.randint(0, Model.objects.count() - 1)
 # random_obj = Model.objects.all()[random_idx]
 # MyModel.objects.order_by('?').first()
+@cache_page(60 * 15)
 def index(request):
     main_slides = MainSlider.objects.all()
     news_list = Article.objects.all()[:4]
@@ -43,6 +46,7 @@ def menu_items(request):
     }
 
 
+@cache_page(60 * 15)
 def section(request, link):
     sctn = ItemClass.objects.get(link=link)
     objcts = sctn.items.all()
@@ -63,6 +67,7 @@ def section(request, link):
     return render(request, 'section.html', context)
 
 
+@cache_page(60 * 15)
 def subsection(request, link, subsection_link):
     sctn = ItemClass.objects.get(link=link)
     subsctn = ItemSubClass.objects.get(link=subsection_link)
@@ -97,7 +102,7 @@ def show_item(request, link, subsection_link, item_link):
         in_cart = request.user.cart.cartitem_set.get(item=item).amount
     except Exception:
         in_cart = 0
-    rand_items = ItemModel.objects.filter(subclass=subsection_link).exclude(link=item.link).order_by('?')[:4]
+    rand_items = cache.get_or_set('rand_items', ItemModel.objects.filter(subclass=subsection_link).exclude(link=item.link).order_by('?')[:4], 300)
     return render(request, 'show.html', {'item': item,
                                          'rand_items': rand_items,
                                          'section': item.section,
@@ -106,14 +111,17 @@ def show_item(request, link, subsection_link, item_link):
                                          })
 
 
+@cache_page(60 * 15)
 def about(request):
     return render(request, 'about.html', {'section': 'about', 'title': 'О нас'})
 
 
+@cache_page(60 * 15)
 def contacts(request):
     return render(request, 'contacts.html', {'section': 'contacts', 'title': 'Контакты'})
 
 
+@cache_page(60 * 15)
 def news(request):
     objcts = Article.objects.all()
     paginator = Paginator(objcts, 12)  # Show 12 news per page
@@ -130,11 +138,13 @@ def news(request):
     return render(request, 'news.html', {'news': news_list, 'title': "Новости", 'section': 'news'})
 
 
+@cache_page(60 * 15)
 def show_article(request, article):
     artic = Article.objects.get(link=article)
     return render(request, 'article.html', {'article': artic, 'section': 'news', 'title': artic.title})
 
 
+@cache_page(60 * 15)
 def all_items(request):
     all_items_lazy = ItemModel.objects.all()
     paginator = Paginator(all_items_lazy, 24)  # Show 24 items per page
@@ -169,8 +179,8 @@ def add_to_cart(request):
             change = 0
         else:
             change = 1
-        sum = 0
-        flag = False
+        _sum = 0
+
         try:
             cart_item = request.user.cart.cartitem_set.get(item=item)
             if change:
@@ -178,7 +188,7 @@ def add_to_cart(request):
             else:
                 cart_item.amount += amount
             amount = cart_item.amount
-            sum = cart_item.sprice()
+            _sum = cart_item.sprice()
             cart_item.save()
         except Cart.DoesNotExist:
             request.user.cart = Cart.objects.create(owner=request.user)
@@ -189,7 +199,7 @@ def add_to_cart(request):
         request.user.cart.save()
         response_data = {
             'amount': amount,
-            'sum': sum,
+            'sum': _sum,
             'total_items': request.user.cart.item_count(),
             'total_price': request.user.cart.sum_price()
         }
